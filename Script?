@@ -1,29 +1,23 @@
 -- Carregamento do Rayfield Interface Suite (Versão Atualizada V3)
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
 local Window = Rayfield:CreateWindow({
    Name = "🔥🔥🔥KAIQUE COMUNIDADE 🔥🔥🔥",
    Icon = 0,
    LoadingTitle = "Carregando uns bagui",
    LoadingSubtitle = "feijão",
    Theme = "Default",
-
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = false,
-
-   -- SISTEMA DE SALVAMENTO DE CONFIGURAÇÕES
    ConfigurationSaving = {
       Enabled = true,
       FolderName = "RayfieldConfig",
       FileName = "MobileHub"
    },
-
    Discord = {
       Enabled = false,
       Invite = "noinvitelink",
       RememberJoins = true
    },
-
    KeySystem = false
 })
 
@@ -138,6 +132,56 @@ TabLP:CreateSlider({
    end,
 })
 
+TabLP:CreateSection("Auto Drible & Giro")
+
+local AutoDribleEnabled = false
+local DribleSpeed = 720 -- Graus por segundo
+local DribleConnection
+
+TabLP:CreateToggle({
+   Name = "Auto Drible (Girar & Andar)",
+   CurrentValue = false,
+   Flag = "AutoDribleToggle",
+   Callback = function(Value)
+      AutoDribleEnabled = Value
+      local RunService = game:GetService("RunService")
+      local LocalPlayer = game:GetService("Players").LocalPlayer
+
+      if AutoDribleEnabled then
+         DribleConnection = RunService.RenderStepped:Connect(function(deltaTime)
+            if LocalPlayer.Character then
+               local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+               local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+
+               if hrp and hum then
+                  -- Faz o personagem caminhar para a frente continuamente
+                  hum:Move(Vector3.new(0, 0, -1), true)
+                  -- Aplica rotação aleatória/contínua no eixo Y
+                  hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(DribleSpeed * deltaTime), 0)
+               end
+            end
+         end)
+      else
+         if DribleConnection then
+            DribleConnection:Disconnect()
+            DribleConnection = nil
+         end
+      end
+   end,
+})
+
+TabLP:CreateSlider({
+   Name = "Velocidade do Drible",
+   Range = {180, 1440},
+   Increment = 90,
+   Suffix = "°/s",
+   CurrentValue = 720,
+   Flag = "AutoDribleSlider",
+   Callback = function(Value)
+      DribleSpeed = Value
+   end,
+})
+
 TabLP:CreateSection("Ataque & Modificadores")
 
 local ReachEnabled = false
@@ -188,6 +232,7 @@ TabLP:CreateSlider({
 })
 
 local NoclipConnection
+
 TabLP:CreateToggle({
    Name = "Noclip (Atravessar Paredes)",
    CurrentValue = false,
@@ -214,6 +259,7 @@ TabLP:CreateToggle({
 })
 
 local InstantInteractConnection
+
 TabLP:CreateToggle({
    Name = "Interação Instantânea",
    CurrentValue = false,
@@ -255,7 +301,7 @@ Tab1:CreateToggle({
       if Value then
          local Lighting = game:GetService("Lighting")
          local Terrain = workspace:FindFirstChildOfClass("Terrain")
-
+         
          Lighting.GlobalShadows = false
          Lighting.FogEnd = 9e9
          Lighting.Brightness = 1
@@ -265,7 +311,7 @@ Tab1:CreateToggle({
                effect.Enabled = false
             end
          end
-
+         
          if Terrain then
             Terrain.WaterWaveSize = 0
             Terrain.WaterWaveSpeed = 0
@@ -273,7 +319,7 @@ Tab1:CreateToggle({
             Terrain.WaterTransparency = 0
             Terrain.Decoration = false
          end
-
+         
          for _, obj in ipairs(workspace:GetDescendants()) do
             if obj:IsA("BasePart") then
                obj.Material = Enum.Material.SmoothPlastic
@@ -286,13 +332,13 @@ Tab1:CreateToggle({
             elseif obj:IsA("Highlight") then
                obj.Enabled = false
             end
-
+            
             local lowerName = string.lower(obj.Name)
             if string.find(lowerName, "pet") or string.find(lowerName, "effect") or string.find(lowerName, "aura") then
                pcall(function() obj:Destroy() end)
             end
          end
-
+         
          Rayfield:Notify({
             Title = "Ultra Anti Lag Ativado",
             Content = "Gráficos reduzidos ao mínimo para FPS máximo!",
@@ -320,6 +366,7 @@ Tab1:CreateToggle({
 })
 
 local AntiKnockbackConnection
+
 Tab1:CreateToggle({
    Name = "Anti Knockback",
    CurrentValue = false,
@@ -427,7 +474,7 @@ Tab2:CreateToggle({
          MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
          MainFrame.BorderSizePixel = 0
          MainFrame.Position = UDim2.new(0.35, 0, 0.3, 0)
-         MainFrame.Size = UDim2.new(0, 320, 0, 200)
+         MainFrame.Size = UDim2.new(0, 320, 0, 200) 
          MainFrame.Active = true
          MainFrame.Draggable = true
 
@@ -535,444 +582,8 @@ Tab2:CreateToggle({
          local autoHop = false
 
          local function updatePlayerCount()
-             local count = #Players:GetPlayers()
-             PlayerCountLabel.Text = "Jogadores no servidor: " .. tostring(count)
+            local count = #Players:GetPlayers()
+            PlayerCountLabel.Text = "Jogadores no servidor: " .. tostring(count)
          end
 
-         Players.PlayerAdded:Connect(updatePlayerCount)
-         Players.PlayerRemoving:Connect(updatePlayerCount)
-         updatePlayerCount()
-
-         local function serverHop()
-             SubTextLabel.Text = "Procurando novo servidor..."
-             local placeId = game.PlaceId
-             local servers = {}
-             
-             pcall(function()
-                 local url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100", tostring(placeId))
-                 local response = game:HttpGet(url)
-                 local data = HttpService:JSONDecode(response)
-                 if data and data.data then
-                     for _, v in ipairs(data.data) do
-                         if type(v) == "table" and v.id ~= game.JobId and v.playing < v.maxPlayers then
-                             table.insert(servers, v.id)
-                         end
-                     end
-                 end
-             end)
-             
-             if #servers > 0 then
-                 local randomServer = servers[math.random(1, #servers)]
-                 TeleportService:TeleportToPlaceInstance(placeId, randomServer, LocalPlayer)
-             else
-                 TeleportService:Teleport(placeId, LocalPlayer)
-             end
-         end
-
-         HopOnceButton.MouseButton1Click:Connect(function()
-             serverHop()
-         end)
-
-         AutoHopButton.MouseButton1Click:Connect(function()
-             autoHop = not autoHop
-             if autoHop then
-                 AutoHopButton.Text = "Auto Troca: ON"
-                 AutoHopButton.BackgroundColor3 = Color3.fromRGB(178, 34, 34)
-             else
-                 AutoHopButton.Text = "Auto Troca: OFF"
-                 AutoHopButton.BackgroundColor3 = Color3.fromRGB(46, 139, 87)
-             end
-         end)
-
-         task.spawn(function()
-             while task.wait(3) do
-                 if autoHop then
-                     local maxAllowed = tonumber(InputBox.Text) or 1
-                     if #Players:GetPlayers() > maxAllowed then
-                         serverHop()
-                         break
-                     end
-                 end
-             end
-         end)
-
-         CloseButton.MouseButton1Click:Connect(function()
-             ScreenGui:Destroy()
-         end)
-
-         local isMinimized = false
-         MinimizeButton.MouseButton1Click:Connect(function()
-             isMinimized = not isMinimized
-             if isMinimized then
-                 MainFrame.Size = UDim2.new(0, 320, 0, 30)
-             else
-                 MainFrame.Size = UDim2.new(0, 320, 0, 200)
-             end
-         end)
-      end
-   end,
-})
-
-Tab2:CreateToggle({
-   Name = "🥚 Auto Hop Sniper (Filtro por Ovo & Pet)",
-   CurrentValue = false,
-   Flag = "EggSniperHopToggle",
-   Callback = function(Value)
-      if Value then
-         local CoreGui = game:GetService("CoreGui")
-         local Players = game:GetService("Players")
-         local TeleportService = game:GetService("TeleportService")
-         local HttpService = game:GetService("HttpService")
-         local LocalPlayer = Players.LocalPlayer
-
-         local ScreenGui = Instance.new("ScreenGui")
-         local MainFrame = Instance.new("Frame")
-         local TitleBar = Instance.new("Frame")
-         local TitleLabel = Instance.new("TextLabel")
-         local CloseButton = Instance.new("TextButton")
-         local MinimizeButton = Instance.new("TextButton")
-         local StatusLabel = Instance.new("TextLabel")
-         local InputBox = Instance.new("TextBox")
-         local HopOnceButton = Instance.new("TextButton")
-         local AutoHopButton = Instance.new("TextButton")
-
-         local success, _ = pcall(function() ScreenGui.Parent = CoreGui end)
-         if not success then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-
-         MainFrame.Parent = ScreenGui
-         MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-         MainFrame.BorderSizePixel = 0
-         MainFrame.Position = UDim2.new(0.35, 0, 0.25, 0)
-         MainFrame.Size = UDim2.new(0, 320, 0, 270)
-         MainFrame.Active = true
-         MainFrame.Draggable = true
-
-         local uiCorner = Instance.new("UICorner")
-         uiCorner.CornerRadius = UDim.new(0, 8)
-         uiCorner.Parent = MainFrame
-
-         TitleBar.Parent = MainFrame
-         TitleBar.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
-         TitleBar.BorderSizePixel = 0
-         TitleBar.Size = UDim2.new(1, 0, 0, 30)
-
-         local titleCorner = Instance.new("UICorner")
-         titleCorner.CornerRadius = UDim.new(0, 8)
-         titleCorner.Parent = TitleBar
-
-         TitleLabel.Parent = TitleBar
-         TitleLabel.BackgroundTransparency = 1
-         TitleLabel.Position = UDim2.new(0, 10, 0, 0)
-         TitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
-         TitleLabel.Font = Enum.Font.GothamBold
-         TitleLabel.Text = "🥚 Egg & Pet Sniper | Custom"
-         TitleLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-         TitleLabel.TextSize = 13
-         TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-         CloseButton.Parent = TitleBar
-         CloseButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-         CloseButton.Position = UDim2.new(1, -25, 0, 5)
-         CloseButton.Size = UDim2.new(0, 20, 0, 20)
-         CloseButton.Font = Enum.Font.GothamBold
-         CloseButton.Text = "✕"
-         CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-         CloseButton.TextSize = 12
-
-         MinimizeButton.Parent = TitleBar
-         MinimizeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-         MinimizeButton.Position = UDim2.new(1, -50, 0, 5)
-         MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
-         MinimizeButton.Font = Enum.Font.GothamBold
-         MinimizeButton.Text = "─"
-         MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-         MinimizeButton.TextSize = 12
-
-         StatusLabel.Parent = MainFrame
-         StatusLabel.BackgroundTransparency = 1
-         StatusLabel.Position = UDim2.new(0, 10, 0, 35)
-         StatusLabel.Size = UDim2.new(1, -20, 0, 20)
-         StatusLabel.Font = Enum.Font.GothamBold
-         StatusLabel.Text = "Status: Aguardando Seleção..."
-         StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-         StatusLabel.TextSize = 12
-         StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-         local SelectedRarity = "Todos (Divine/Eternal/Secret)"
-         local SelectedPet = "Qualquer Pet"
-
-         local RarityButton = Instance.new("TextButton")
-         RarityButton.Parent = MainFrame
-         RarityButton.BackgroundColor3 = Color3.fromRGB(30, 30, 42)
-         RarityButton.BorderSizePixel = 0
-         RarityButton.Position = UDim2.new(0.05, 0, 0, 60)
-         RarityButton.Size = UDim2.new(0.9, 0, 0, 30)
-         RarityButton.Font = Enum.Font.Gotham
-         RarityButton.Text = "Raridade: " .. SelectedRarity
-         RarityButton.TextColor3 = Color3.fromRGB(200, 200, 210)
-         RarityButton.TextSize = 11
-
-         local PetButton = Instance.new("TextButton")
-         PetButton.Parent = MainFrame
-         PetButton.BackgroundColor3 = Color3.fromRGB(30, 30, 42)
-         PetButton.BorderSizePixel = 0
-         PetButton.Position = UDim2.new(0.05, 0, 0, 95)
-         PetButton.Size = UDim2.new(0.9, 0, 0, 30)
-         PetButton.Font = Enum.Font.Gotham
-         PetButton.Text = "Pet Alvo: " .. SelectedPet
-         PetButton.TextColor3 = Color3.fromRGB(200, 200, 210)
-         PetButton.TextSize = 11
-
-         local RarityList = {"Todos (Divine/Eternal/Secret)", "Divine", "Eternal", "Secret"}
-         local PetList = {"Qualquer Pet", "Kitsune", "Unicorn", "Oni Tiger", "Mosasaurus", "Cerberus", "Kraken", "Yeti", "Stag", "T-Rex"}
-         
-         local currentRarityIdx = 1
-         RarityButton.MouseButton1Click:Connect(function()
-             currentRarityIdx = (currentRarityIdx % #RarityList) + 1
-             SelectedRarity = RarityList[currentRarityIdx]
-             RarityButton.Text = "Raridade: " .. SelectedRarity
-         end)
-
-         local currentPetIdx = 1
-         PetButton.MouseButton1Click:Connect(function()
-             currentPetIdx = (currentPetIdx % #PetList) + 1
-             SelectedPet = PetList[currentPetIdx]
-             PetButton.Text = "Pet Alvo: " .. SelectedPet
-         end)
-
-         local LimitLabel = Instance.new("TextLabel")
-         LimitLabel.Parent = MainFrame
-         LimitLabel.BackgroundTransparency = 1
-         LimitLabel.Position = UDim2.new(0, 10, 0, 130)
-         LimitLabel.Size = UDim2.new(1, -20, 0, 20)
-         LimitLabel.Font = Enum.Font.Gotham
-         LimitLabel.Text = "Máximo de Players no Servidor:"
-         LimitLabel.TextColor3 = Color3.fromRGB(160, 160, 170)
-         LimitLabel.TextSize = 11
-         LimitLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-         InputBox.Parent = MainFrame
-         InputBox.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
-         InputBox.BorderSizePixel = 0
-         InputBox.Position = UDim2.new(0.1, 0, 0, 155)
-         InputBox.Size = UDim2.new(0.8, 0, 0, 30)
-         InputBox.Font = Enum.Font.GothamBold
-         InputBox.Text = "4"
-         InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-         InputBox.TextSize = 14
-
-         HopOnceButton.Parent = MainFrame
-         HopOnceButton.BackgroundColor3 = Color3.fromRGB(0, 102, 204)
-         HopOnceButton.BorderSizePixel = 0
-         HopOnceButton.Position = UDim2.new(0.05, 0, 0, 200)
-         HopOnceButton.Size = UDim2.new(0.42, 0, 0, 45)
-         HopOnceButton.Font = Enum.Font.GothamBold
-         HopOnceButton.Text = "Buscar 1x"
-         HopOnceButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-         HopOnceButton.TextSize = 12
-
-         AutoHopButton.Parent = MainFrame
-         AutoHopButton.BackgroundColor3 = Color3.fromRGB(46, 139, 87)
-         AutoHopButton.BorderSizePixel = 0
-         AutoHopButton.Position = UDim2.new(0.53, 0, 0, 200)
-         AutoHopButton.Size = UDim2.new(0.42, 0, 0, 45)
-         AutoHopButton.Font = Enum.Font.GothamBold
-         AutoHopButton.Text = "Auto Sniper: OFF"
-         AutoHopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-         AutoHopButton.TextSize = 12
-
-         local autoSnipe = false
-         local isTeleporting = false
-
-         local function checkTargetEgg()
-             for _, obj in ipairs(workspace:GetDescendants()) do
-                 local lowerName = string.lower(obj.Name)
-                 
-                 local matchesRarity = false
-                 if SelectedRarity == "Todos (Divine/Eternal/Secret)" then
-                     matchesRarity = string.find(lowerName, "divine") or string.find(lowerName, "eternal") or string.find(lowerName, "secret")
-                 else
-                     matchesRarity = string.find(lowerName, string.lower(SelectedRarity))
-                 end
-
-                 local matchesPet = false
-                 if SelectedPet == "Qualquer Pet" then
-                     matchesPet = true
-                 else
-                     matchesPet = string.find(lowerName, string.lower(SelectedPet))
-                 end
-
-                 if matchesRarity and matchesPet then
-                     return true, obj
-                 end
-             end
-             return false, nil
-         end
-
-         local function smoothTeleportAndCollect(targetObj)
-             if isTeleporting or not targetObj then return end
-             isTeleporting = true
-
-             local char = LocalPlayer.Character
-             if not char or not char:FindFirstChild("HumanoidRootPart") then 
-                 isTeleporting = false
-                 return 
-             end
-
-             local hrp = char.HumanoidRootPart
-             local originalCFrame = hrp.CFrame
-
-             local noclipConn = game:GetService("RunService").Stepped:Connect(function()
-                 for _, part in ipairs(char:GetDescendants()) do
-                     if part:IsA("BasePart") then part.CanCollide = false end
-                 end
-             end)
-
-             local targetPos = targetObj:IsA("BasePart") and targetObj.Position or (targetObj:FindFirstChildWhichIsA("BasePart") and targetObj:FindFirstChildWhichIsA("BasePart").Position)
-             
-             if targetPos then
-                 StatusLabel.Text = "Status: Indo pegar (" .. targetObj.Name .. ")..."
-                 StatusLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-
-                 local speed = 200
-                 local currentPos = hrp.Position
-                 local distance = (targetPos - currentPos).Magnitude
-                 local travelTime = distance / speed
-                 local startTime = tick()
-
-                 while (tick() - startTime) < travelTime do
-                     if not char or not hrp then break end
-                     local alpha = (tick() - startTime) / travelTime
-                     hrp.CFrame = CFrame.new(currentPos:Lerp(targetPos, alpha))
-                     task.wait()
-                 end
-
-                 if hrp then hrp.CFrame = CFrame.new(targetPos) end
-                 task.wait(0.2)
-
-                 local prompt = targetObj:FindFirstChildOfClass("ProximityPrompt") or targetObj:FindFirstChildWhichIsA("ProximityPrompt", true)
-                 if prompt and fireproximityprompt then
-                     fireproximityprompt(prompt)
-                 end
-                 task.wait(0.5)
-
-                 StatusLabel.Text = "Status: Voltando para base..."
-                 local returnStartPos = hrp.Position
-                 local returnTargetPos = originalCFrame.Position
-                 local returnDistance = (returnTargetPos - returnStartPos).Magnitude
-                 local returnTime = returnDistance / speed
-                 local returnStartTime = tick()
-
-                 while (tick() - returnStartTime) < returnTime do
-                     if not char or not hrp then break end
-                     local alpha = (tick() - returnStartTime) / returnTime
-                     hrp.CFrame = CFrame.new(returnStartPos:Lerp(returnTargetPos, alpha))
-                     task.wait()
-                 end
-
-                 if hrp then hrp.CFrame = originalCFrame end
-                 StatusLabel.Text = "Status: Item coletado com sucesso!"
-                 StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
-             end
-
-             if noclipConn then noclipConn:Disconnect() end
-             isTeleporting = false
-         end
-
-         local function sniperHop()
-             StatusLabel.Text = "Status: Buscando novo servidor..."
-             local maxPlayersAllowed = tonumber(InputBox.Text) or 4
-             local placeId = game.PlaceId
-             local servers = {}
-             
-             pcall(function()
-                 local url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100", tostring(placeId))
-                 local response = game:HttpGet(url)
-                 local data = HttpService:JSONDecode(response)
-                 if data and data.data then
-                     for _, v in ipairs(data.data) do
-                         if type(v) == "table" and v.id ~= game.JobId and v.playing <= maxPlayersAllowed then
-                             table.insert(servers, v.id)
-                         end
-                     end
-                 end
-             end)
-             
-             if #servers > 0 then
-                 local randomServer = servers[math.random(1, #servers)]
-                 TeleportService:TeleportToPlaceInstance(placeId, randomServer, LocalPlayer)
-             else
-                 TeleportService:Teleport(placeId, LocalPlayer)
-             end
-         end
-
-         HopOnceButton.MouseButton1Click:Connect(function()
-             local found, eggObj = checkTargetEgg()
-             if found then
-                 StatusLabel.Text = "Status: ALVO ENCONTRADO!"
-                 StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
-                 smoothTeleportAndCollect(eggObj)
-             else
-                 sniperHop()
-             end
-         end)
-
-         AutoHopButton.MouseButton1Click:Connect(function()
-             autoSnipe = not autoSnipe
-             if autoSnipe then
-                 AutoHopButton.Text = "Auto Sniper: ON"
-                 AutoHopButton.BackgroundColor3 = Color3.fromRGB(178, 34, 34)
-             else
-                 AutoHopButton.Text = "Auto Sniper: OFF"
-                 AutoHopButton.BackgroundColor3 = Color3.fromRGB(46, 139, 87)
-             end
-         end)
-
-         task.spawn(function()
-             task.wait(2)
-             local found, eggObj = checkTargetEgg()
-             if found then
-                 StatusLabel.Text = "Status: ALVO NESTE SERVIDOR!"
-                 StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
-                 smoothTeleportAndCollect(eggObj)
-             else
-                 StatusLabel.Text = "Status: Alvo não encontrado aqui."
-                 StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-             end
-
-             while task.wait(4) do
-                 if autoSnipe and not isTeleporting then
-                     local isEggHere, eggInstance = checkTargetEgg()
-                     if not isEggHere then
-                         sniperHop()
-                         break
-                     else
-                         StatusLabel.Text = "Status: Coletando Alvo..."
-                         StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 127)
-                         smoothTeleportAndCollect(eggInstance)
-                     end
-                 end
-             end
-         end)
-
-         CloseButton.MouseButton1Click:Connect(function()
-             ScreenGui:Destroy()
-         end)
-
-         local isMinimized = false
-         MinimizeButton.MouseButton1Click:Connect(function()
-             isMinimized = not isMinimized
-             if isMinimized then
-                 MainFrame.Size = UDim2.new(0, 320, 0, 30)
-             else
-                 MainFrame.Size = UDim2.new(0, 320, 0, 270)
-             end
-         end)
-      end
-   end,
-})
-
---------------------------------------------------------------------------------
--- CARREGAMENTO AUTOMÁTICO DAS CONFIGURAÇÕES SALVAS
---------------------------------------------------------------------------------
-Rayfield:LoadConfiguration()
+         Players.Player
