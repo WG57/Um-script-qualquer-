@@ -135,7 +135,7 @@ TabLP:CreateSlider({
 TabLP:CreateSection("Auto Drible & Giro")
 
 local AutoDribleEnabled = false
-local DribleSpeed = 720 -- Graus por segundo
+local DribleSpeed = 720
 local DribleConnection
 
 TabLP:CreateToggle({
@@ -154,9 +154,7 @@ TabLP:CreateToggle({
                local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 
                if hrp and hum then
-                  -- Faz o personagem caminhar para a frente continuamente
                   hum:Move(Vector3.new(0, 0, -1), true)
-                  -- Aplica rotação aleatória/contínua no eixo Y
                   hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(DribleSpeed * deltaTime), 0)
                end
             end
@@ -403,7 +401,9 @@ Tab2:CreateToggle({
    Flag = "MirandaParasiteToggle",
    Callback = function(Value)
       if Value then
-         loadstring(game:HttpGet("https://raw.githubusercontent.com/miirandahub/loader/refs/heads/main/parasite"))()
+         pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/miirandahub/loader/refs/heads/main/parasite"))()
+         end)
       end
    end,
 })
@@ -414,7 +414,9 @@ Tab2:CreateToggle({
    Flag = "LennomParasiteToggle",
    Callback = function(Value)
       if Value then
-         loadstring(game:HttpGet("https://pastefy.app/DBk446XH/raw"))()
+         pcall(function()
+            loadstring(game:HttpGet("https://pastefy.app/DBk446XH/raw"))()
+         end)
       end
    end,
 })
@@ -425,7 +427,9 @@ Tab2:CreateToggle({
    Flag = "MirandaNormalToggle",
    Callback = function(Value)
       if Value then
-         loadstring(game:HttpGet("https://raw.githubusercontent.com/miirandahub/loader/refs/heads/main/stealaegg"))()
+         pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/miirandahub/loader/refs/heads/main/stealaegg"))()
+         end)
       end
    end,
 })
@@ -436,7 +440,9 @@ Tab2:CreateToggle({
    Flag = "LennomNormalToggle",
    Callback = function(Value)
       if Value then
-         loadstring(game:HttpGet("https://raw.githubusercontent.com/lennonxscripts/lennonhub/main/stealaegg.lua"))()
+         pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/lennonxscripts/lennonhub/main/stealaegg.lua"))()
+         end)
       end
    end,
 })
